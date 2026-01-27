@@ -301,16 +301,18 @@ function App() {
             ))}
           </div>
 
-          <div className="max-w-2xl mx-auto">
-            <BalanceDisplay balance={balance} totalBudget={currentBudget?.pay_period_amount || 0} />
-            <ExpenseForm onAddExpense={handleAddExpense} />
+          <div className="max-w-2xl mx-auto px-6">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
+              <BalanceDisplay balance={balance} totalBudget={currentBudget?.pay_period_amount || 0} />
+              <ExpenseForm onAddExpense={handleAddExpense} />
 
-            <div className="mt-6">
-              <SavingsDisplay savings={savings.filter((s) => s.budget_id === currentBudget?.id)} />
-            </div>
+              <div className="mt-6">
+                <SavingsDisplay savings={savings.filter((s) => s.budget_id === currentBudget?.id)} />
+              </div>
 
-            <div className="mt-6">
-              <ExpenseList expenses={expenses} onDeleteExpense={handleDeleteExpense} onEditExpense={setEditingExpense} />
+              <div className="mt-6">
+                <ExpenseList expenses={expenses} onDeleteExpense={handleDeleteExpense} onEditExpense={setEditingExpense} />
+              </div>
             </div>
           </div>
         </div>
