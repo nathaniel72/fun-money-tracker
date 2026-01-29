@@ -4,10 +4,11 @@ import type { Budget } from '../lib/supabase';
 
 interface SettingsModalProps {
   settings: Budget | null;
+  onDelete: (budgetId: string) => void;
   onSave: () => void;
 }
 
-export function SettingsModal({ settings }: SettingsModalProps) {
+export function SettingsModal({ settings, onDelete }: SettingsModalProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!settings) {
@@ -74,6 +75,16 @@ export function SettingsModal({ settings }: SettingsModalProps) {
               className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors mt-6"
             >
               Close
+            </button>
+
+            <button
+              onClick={() => {
+                onDelete(settings.id);
+                setIsOpen(false);
+              }}
+              className="w-full border border-red-200 text-red-600 py-3 rounded-xl font-semibold hover:bg-red-50 transition-colors mt-3"
+            >
+              Delete Budget
             </button>
           </div>
         </div>
