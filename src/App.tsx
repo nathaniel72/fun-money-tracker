@@ -249,6 +249,38 @@ function App() {
       console.error('Error creating budget:', error);
     }
   };
+  
+  const handleDeleteBudget = async (budgetId: string) => {
+    try {
+      await supabase.from('expenses').delete().eq('user_id', userId).eq('budget_id', budgetId);
+      await supabase.from('savings').delete().eq('user_id', userId).eq('budget_id', budgetId);
+
+      const { error } = await supabase
+        .from('budgets')
+        .delete()
+        .eq('id', budgetId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      const updatedBudgets = budgets.filter((budget) => budget.id !== budgetId);
+      setBudgets(updatedBudgets);
+
+      if (updatedBudgets.length === 0) {
+        setCurrentBudgetIndex(0);
+        setExpenses([]);
+        setSavings([]);
+        setBalance(0);
+        return;
+      }
+
+      const nextIndex = Math.min(currentBudgetIndex, updatedBudgets.length - 1);
+      setCurrentBudgetIndex(nextIndex);
+      loadBudgetData(updatedBudgets[nextIndex]);
+    } catch (error) {
+      console.error('Error deleting budget:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -318,7 +350,7 @@ function App() {
         </div>
       </SwipeContainer>
 
-      <SettingsModal settings={currentBudget} onSave={() => {}} />
+      <SettingsModal settings={currentBudget} onDelete={handleDeleteBudget} onSave={() => {}} />
       <NewBudgetModal onCreate={handleCreateBudget} />
       <EditExpenseModal
         expense={editingExpense}
