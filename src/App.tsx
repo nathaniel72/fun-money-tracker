@@ -282,6 +282,33 @@ function App() {
     }
   };
 
+  const handleSaveBudget = async (budgetId: string, amount: number) => {
+    try {
+      const { error } = await supabase
+        .from('budgets')
+        .update({
+          pay_period_amount: amount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', budgetId)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      const updatedBudgets = budgets.map((budget) =>
+        budget.id === budgetId ? { ...budget, pay_period_amount: amount } : budget
+      );
+      setBudgets(updatedBudgets);
+
+      if (currentBudget?.id === budgetId) {
+        const totalSpent = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+        setBalance(amount - totalSpent);
+      }
+    } catch (error) {
+      console.error('Error updating budget:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -350,7 +377,11 @@ function App() {
         </div>
       </SwipeContainer>
 
-      <SettingsModal settings={currentBudget} onDelete={handleDeleteBudget} onSave={() => {}} />
+      <SettingsModal
+        settings={currentBudget}
+        onDelete={handleDeleteBudget}
+        onSave={handleSaveBudget}
+      />
       <NewBudgetModal onCreate={handleCreateBudget} />
       <EditExpenseModal
         expense={editingExpense}
