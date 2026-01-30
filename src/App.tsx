@@ -193,7 +193,7 @@ function App() {
       const oldExpense = expenses.find((e) => e.id === id);
       if (!oldExpense) return;
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('expenses')
         .update({
           amount,
@@ -202,19 +202,24 @@ function App() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select()
+        .single();
 
       if (error) throw error;
 
-      const updatedExpenses = expenses.map((e) =>
-        e.id === id
-          ? { ...e, amount, description, expense_date: date }
-          : e
+      const updatedExpense = data ?? { ...oldExpense, amount, description, expense_date: date };
+      setExpenses((prevExpenses) =>
+        prevExpenses
+          .map((expense) => (expense.id === id ? updatedExpense : expense))
+          .sort(
+            (a, b) =>
+              new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime()
+          )
       );
-      setExpenses(updatedExpenses);
 
       const amountDifference = amount - Number(oldExpense.amount);
-      setBalance(balance - amountDifference);
+      setBalance((prevBalance) => prevBalance - amountDifference);
       setEditingExpense(null);
     } catch (error) {
       console.error('Error updating expense:', error);
