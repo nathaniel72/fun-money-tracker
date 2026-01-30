@@ -209,17 +209,18 @@ function App() {
       if (error) throw error;
 
       const updatedExpense = data ?? { ...oldExpense, amount, description, expense_date: date };
-      setExpenses((prevExpenses) =>
-        prevExpenses
+      setExpenses((prevExpenses) => {
+        const nextExpenses = prevExpenses
           .map((expense) => (expense.id === id ? updatedExpense : expense))
           .sort(
             (a, b) =>
               new Date(b.expense_date).getTime() - new Date(a.expense_date).getTime()
-          )
-      );
+          );
+        const totalSpent = nextExpenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+        setBalance(Number(currentBudget?.pay_period_amount ?? 0) - totalSpent);
+        return nextExpenses;
+      });
 
-      const amountDifference = amount - Number(oldExpense.amount);
-      setBalance((prevBalance) => prevBalance - amountDifference);
       setEditingExpense(null);
     } catch (error) {
       console.error('Error updating expense:', error);
