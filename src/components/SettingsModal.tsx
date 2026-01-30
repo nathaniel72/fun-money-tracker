@@ -1,19 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Settings as SettingsIcon } from 'lucide-react';
 import type { Budget } from '../lib/supabase';
 
 interface SettingsModalProps {
   settings: Budget | null;
   onDelete: (budgetId: string) => void;
-  onSave: () => void;
+  onSave: (budgetId: string, amount: number) => void;
 }
 
-export function SettingsModal({ settings, onDelete }: SettingsModalProps) {
+export function SettingsModal({ settings, onDelete, onSave }: SettingsModalProps) {
   const [isOpen, setIsOpen] = useState(false);
+    const [amountInput, setAmountInput] = useState('');
+
+  useEffect(() => {
+    if (!settings) return;
+    setAmountInput(settings.pay_period_amount.toFixed(2));
+  }, [settings, isOpen]);
 
   if (!settings) {
     return null;
   }
+
+    const parsedAmount = Number.parseFloat(amountInput);
+  const isAmountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
+  const hasAmountChanged =
+    isAmountValid && parsedAmount !== Number(settings.pay_period_amount);
 
   return (
     <>
@@ -42,9 +53,19 @@ export function SettingsModal({ settings, onDelete }: SettingsModalProps) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Amount Per Period
                 </label>
-                <div className="text-2xl font-bold text-emerald-600">
-                  ${settings.pay_period_amount.toFixed(2)}
-                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={amountInput}
+                  onChange={(event) => setAmountInput(event.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                {!isAmountValid && (
+                  <p className="text-sm text-red-500 mt-2">
+                    Enter an amount greater than zero.
+                  </p>
+                )}
               </div>
 
               <div>
@@ -70,9 +91,21 @@ export function SettingsModal({ settings, onDelete }: SettingsModalProps) {
               </div>
             </div>
 
+                        <button
+              onClick={() => {
+                if (!isAmountValid || !hasAmountChanged) return;
+                onSave(settings.id, parsedAmount);
+                setIsOpen(false);
+              }}
+              disabled={!hasAmountChanged}
+              className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors mt-6 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              Save Budget
+            </button>
+
             <button
               onClick={() => setIsOpen(false)}
-              className="w-full bg-black text-white py-3 rounded-xl font-semibold hover:bg-gray-800 transition-colors mt-6"
+              className="w-full border border-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors mt-3"
             >
               Close
             </button>
