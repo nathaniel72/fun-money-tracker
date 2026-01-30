@@ -10,7 +10,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ settings, onDelete, onSave }: SettingsModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-    const [amountInput, setAmountInput] = useState('');
+  const [amountInput, setAmountInput] = useState('');
 
   useEffect(() => {
     if (!settings) return;
@@ -21,7 +21,7 @@ export function SettingsModal({ settings, onDelete, onSave }: SettingsModalProps
     return null;
   }
 
-    const parsedAmount = Number.parseFloat(amountInput);
+  const parsedAmount = Number.parseFloat(amountInput);
   const isAmountValid = Number.isFinite(parsedAmount) && parsedAmount > 0;
   const hasAmountChanged =
     isAmountValid && parsedAmount !== Number(settings.pay_period_amount);
@@ -91,7 +91,7 @@ export function SettingsModal({ settings, onDelete, onSave }: SettingsModalProps
               </div>
             </div>
 
-                        <button
+            <button
               onClick={() => {
                 if (!isAmountValid || !hasAmountChanged) return;
                 onSave(settings.id, parsedAmount);
