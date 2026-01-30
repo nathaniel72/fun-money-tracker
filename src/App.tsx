@@ -66,8 +66,12 @@ function App() {
         .order('expense_date', { ascending: false });
 
       if (expensesData) {
-        setExpenses(expensesData);
-        const totalSpent = expensesData.reduce((sum, e) => sum + Number(e.amount), 0);
+        const normalizedExpenses = expensesData.map((expense) => ({
+          ...expense,
+          amount: Number(expense.amount),
+        }));
+        setExpenses(normalizedExpenses);
+        const totalSpent = normalizedExpenses.reduce((sum, e) => sum + Number(e.amount), 0);
         setBalance(Number(budget.pay_period_amount) - totalSpent);
       } else {
         setBalance(Number(budget.pay_period_amount));
@@ -160,8 +164,9 @@ function App() {
       if (error) throw error;
 
       if (data) {
-        setExpenses([data, ...expenses]);
-        setBalance(balance - amount);
+        const normalizedExpense = { ...data, amount: Number(data.amount) };
+        setExpenses([normalizedExpense, ...expenses]);
+        setBalance(balance - Number(normalizedExpense.amount));
       }
     } catch (error) {
       console.error('Error adding expense:', error);
@@ -208,7 +213,13 @@ function App() {
 
       if (error) throw error;
 
-      const updatedExpense = data ?? { ...oldExpense, amount, description, expense_date: date };
+      const normalizedData = data ? { ...data, amount: Number(data.amount) } : null;
+      const updatedExpense = normalizedData ?? {
+        ...oldExpense,
+        amount: Number(amount),
+        description,
+        expense_date: date,
+      };
       setExpenses((prevExpenses) => {
         const nextExpenses = prevExpenses
           .map((expense) => (expense.id === id ? updatedExpense : expense))
