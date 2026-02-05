@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase, getUserId } from './lib/supabase';
-import type { Budget, Expense, Savings } from './lib/supabase';
+import type { Budget, Expense, Savings, FixedExpense } from './lib/supabase';
 import { BalanceDisplay } from './components/BalanceDisplay';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseList } from './components/ExpenseList';
@@ -9,12 +9,15 @@ import { SavingsDisplay } from './components/SavingsDisplay';
 import { SwipeContainer } from './components/SwipeContainer';
 import { NewBudgetModal } from './components/NewBudgetModal';
 import { EditExpenseModal } from './components/EditExpenseModal';
+import { FixedExpenseForm } from './components/FixedExpenseForm';
+import { FixedExpensesList } from './components/FixedExpensesList';
 
 function App() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [currentBudgetIndex, setCurrentBudgetIndex] = useState(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [savings, setSavings] = useState<Savings[]>([]);
+  const [fixedExpenses, setFixedExpenses] = useState<FixedExpense[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -55,6 +58,30 @@ function App() {
     }
   };
 
+  const getFixedExpensesForPeriod = (allFixed: FixedExpense[], budget: Budget): FixedExpense[] => {
+    const periodStart = new Date(budget.current_period_start);
+    const periodEnd = new Date(periodStart);
+    periodEnd.setDate(periodEnd.getDate() + budget.pay_period_days);
+
+    return allFixed.filter((fixed) => {
+      const chargeDate = new Date(periodStart);
+      chargeDate.setDate(fixed.charge_day);
+
+      if (chargeDate >= periodStart && chargeDate < periodEnd) {
+        return true;
+      }
+
+      const nextMonthChargeDate = new Date(chargeDate);
+      nextMonthChargeDate.setMonth(nextMonthChargeDate.getMonth() + 1);
+
+      if (nextMonthChargeDate >= periodStart && nextMonthChargeDate < periodEnd) {
+        return true;
+      }
+
+      return false;
+    });
+  };
+
   const loadBudgetData = async (budget: Budget) => {
     try {
       const { data: expensesData } = await supabase
@@ -86,6 +113,18 @@ function App() {
 
       if (savingsData) {
         setSavings(savingsData);
+      }
+
+      const { data: fixedExpensesData } = await supabase
+        .from('fixed_expenses')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('budget_id', budget.id)
+        .order('charge_day', { ascending: true });
+
+      if (fixedExpensesData) {
+        const filtered = getFixedExpensesForPeriod(fixedExpensesData, budget);
+        setFixedExpenses(filtered);
       }
     } catch (error) {
       console.error('Error loading budget data:', error);
@@ -271,6 +310,7 @@ function App() {
     try {
       await supabase.from('expenses').delete().eq('user_id', userId).eq('budget_id', budgetId);
       await supabase.from('savings').delete().eq('user_id', userId).eq('budget_id', budgetId);
+      await supabase.from('fixed_expenses').delete().eq('user_id', userId).eq('budget_id', budgetId);
 
       const { error } = await supabase
         .from('budgets')
@@ -287,6 +327,7 @@ function App() {
         setCurrentBudgetIndex(0);
         setExpenses([]);
         setSavings([]);
+        setFixedExpenses([]);
         setBalance(0);
         return;
       }
@@ -323,6 +364,50 @@ function App() {
       }
     } catch (error) {
       console.error('Error updating budget:', error);
+    }
+  };
+
+  const handleAddFixedExpense = async (name: string, amount: number, chargeDay: number) => {
+    if (!currentBudget) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('fixed_expenses')
+        .insert({
+          user_id: userId,
+          budget_id: currentBudget.id,
+          name,
+          amount,
+          charge_day: chargeDay,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const newFixed = { ...data, amount: Number(data.amount) };
+        const updated = getFixedExpensesForPeriod([...fixedExpenses, newFixed], currentBudget);
+        setFixedExpenses(updated);
+      }
+    } catch (error) {
+      console.error('Error adding fixed expense:', error);
+    }
+  };
+
+  const handleDeleteFixedExpense = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('fixed_expenses')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      setFixedExpenses(fixedExpenses.filter((e) => e.id !== id));
+    } catch (error) {
+      console.error('Error deleting fixed expense:', error);
     }
   };
 
@@ -381,6 +466,17 @@ function App() {
             <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6">
               <BalanceDisplay balance={balance} totalBudget={currentBudget?.pay_period_amount || 0} />
               <ExpenseForm onAddExpense={handleAddExpense} />
+
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-gray-900">Fixed Expenses</h2>
+                  <FixedExpenseForm onAddFixedExpense={handleAddFixedExpense} />
+                </div>
+                <FixedExpensesList
+                  fixedExpenses={fixedExpenses}
+                  onDeleteFixedExpense={handleDeleteFixedExpense}
+                />
+              </div>
 
               <div className="mt-6">
                 <SavingsDisplay savings={savings.filter((s) => s.budget_id === currentBudget?.id)} />

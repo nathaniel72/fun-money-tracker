@@ -57,3 +57,14 @@ export interface Savings {
   period_end: string;
   created_at: string;
 }
+
+export interface FixedExpense {
+  id: string;
+  user_id: string;
+  budget_id: string;
+  name: string;
+  amount: number;
+  charge_day: number;
+  created_at: string;
+  updated_at: string;
+}
