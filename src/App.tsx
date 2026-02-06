@@ -9,8 +9,7 @@ import { SavingsDisplay } from './components/SavingsDisplay';
 import { SwipeContainer } from './components/SwipeContainer';
 import { NewBudgetModal } from './components/NewBudgetModal';
 import { EditExpenseModal } from './components/EditExpenseModal';
-import { FixedExpenseForm } from './components/FixedExpenseForm';
-import { FixedExpensesList } from './components/FixedExpensesList';
+import { FixedExpensesModal } from './components/FixedExpensesModal';
 
 function App() {
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -467,17 +466,6 @@ function App() {
               <BalanceDisplay balance={balance} totalBudget={currentBudget?.pay_period_amount || 0} />
               <ExpenseForm onAddExpense={handleAddExpense} />
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Fixed Expenses</h2>
-                  <FixedExpenseForm onAddFixedExpense={handleAddFixedExpense} />
-                </div>
-                <FixedExpensesList
-                  fixedExpenses={fixedExpenses}
-                  onDeleteFixedExpense={handleDeleteFixedExpense}
-                />
-              </div>
-
               <div className="mt-6">
                 <SavingsDisplay savings={savings.filter((s) => s.budget_id === currentBudget?.id)} />
               </div>
@@ -501,6 +489,11 @@ function App() {
         isOpen={editingExpense !== null}
         onClose={() => setEditingExpense(null)}
         onSave={handleEditExpense}
+      />
+      <FixedExpensesModal
+        fixedExpenses={fixedExpenses}
+        onAddFixedExpense={handleAddFixedExpense}
+        onDeleteFixedExpense={handleDeleteFixedExpense}
       />
     </div>
   );
