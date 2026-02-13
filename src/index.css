@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root.dark-mode {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+:root.dark-mode img,
+:root.dark-mode video,
+:root.dark-mode canvas,
+:root.dark-mode svg {
+  filter: invert(1) hue-rotate(180deg);
+}
