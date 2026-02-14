@@ -12,6 +12,9 @@ import { EditExpenseModal } from './components/EditExpenseModal';
 import { FixedExpensesModal } from './components/FixedExpensesModal';
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true';
+  });
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [currentBudgetIndex, setCurrentBudgetIndex] = useState(0);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -27,6 +30,11 @@ function App() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark-mode', isDarkMode);
+    localStorage.setItem('darkMode', String(isDarkMode));
+  }, [isDarkMode]);
 
   useEffect(() => {
     if (currentBudget) {
@@ -482,6 +490,8 @@ function App() {
         settings={currentBudget}
         onDelete={handleDeleteBudget}
         onSave={handleSaveBudget}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode((current) => !current)}
       />
       <NewBudgetModal onCreate={handleCreateBudget} />
       <EditExpenseModal
