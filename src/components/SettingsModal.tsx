@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
-import { X, Settings as SettingsIcon } from 'lucide-react';
+import { X, Settings as SettingsIcon, Moon, Sun } from 'lucide-react';
 import type { Budget } from '../lib/supabase';
 
 interface SettingsModalProps {
   settings: Budget | null;
   onDelete: (budgetId: string) => void;
   onSave: (budgetId: string, amount: number) => void;
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
-export function SettingsModal({ settings, onDelete, onSave }: SettingsModalProps) {
+export function SettingsModal({ settings, onDelete, onSave, isDarkMode, onToggleDarkMode }: SettingsModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [amountInput, setAmountInput] = useState('');
 
@@ -88,6 +90,31 @@ export function SettingsModal({ settings, onDelete, onSave }: SettingsModalProps
                     year: 'numeric',
                   })}
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div className="flex items-center gap-2">
+                  {isDarkMode ? (
+                    <Moon size={18} className="text-gray-700" />
+                  ) : (
+                    <Sun size={18} className="text-gray-700" />
+                  )}
+                  <label className="text-sm font-medium text-gray-700">
+                    Dark Mode
+                  </label>
+                </div>
+                <button
+                  onClick={onToggleDarkMode}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                    isDarkMode ? 'bg-black' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                      isDarkMode ? 'translate-x-6' : ''
+                    }`}
+                  />
+                </button>
               </div>
             </div>
 
